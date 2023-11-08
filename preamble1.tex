@@ -1,3 +1,4 @@
+\usepackage{amsmath, amssymb}
 \usepackage[x12names, rgb, html]{xcolor}
 
 \definecolor{red}{HTML}{f54b1a}
@@ -23,12 +24,13 @@
   urlcolor = lightblue
 }
 
+\usepackage[margin=1in]{geometry}
 
 \newcommand{\grant}[1]{\marginpar{\huge \textcolor{green}{$\star$}} \textcolor{green}{GMR: #1}}
 \renewcommand{\thefootnote}{$\star$}
 
-\usepackage{ebgaramond}
-\usepackage[cmintegrals,cmbraces]{newtxmath}
+%\usepackage{ebgaramond}
+%\usepackage[cmintegrals,cmbraces]{newtxmath}
 %\usepackage{ebgaramond-maths}
 % \usepackage{fontspec}
 % \setmainfont[]{ebgaramond}
@@ -42,26 +44,7 @@
 %   ]{}
 
 \usepackage{graphicx}
-\renewcommand*\contentsname{}
 
-
-\usepackage[margin=1.25in]{geometry}
-%\usepackage[ruled,vlined]{algorithm2e}
-
-\usepackage{algorithm}
-\usepackage{algpseudocode}
-\algrenewcommand{\algorithmiccomment}[1]{$\vartriangleright$ #1}
-\algrenewcommand{\algorithmicreturn}{\textbf{Return: }}
-\algnewcommand\algorithmicinput{\textbf{Input: }}
-\algnewcommand\Input{\State \algorithmicinput}
-
-
-%\textheight 8.5in
-
-
-\newtheorem{theorem}{Theorem}[section]
-\newtheorem{proposition}[theorem]{Proposition}
-%\newtheorem{algorithm}{Algorithm}[section]
 
 
 \newcommand{\diff}[3]{\frac{\partial^{#3}#1}{\partial #2^{#3}}}
