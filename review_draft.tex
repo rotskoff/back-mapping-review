@@ -1,5 +1,5 @@
 \documentclass[11pt]{article}
-\input{preamble1.tex}
+\input{preamble.tex}
 
 \title{Sampling thermodynamic ensembles of molecular systems with generative neural networks: Will integrating physics-based models close the generalization gap?}
 \author{Grant M. Rotskoff}
@@ -238,13 +238,13 @@ A representation of the direct transformation between two distributions is param
 \end{equation}
 In this generative modeling framework, the transformation between the tractable Gaussian distribution and the target is first built sequence of simple intermediate distributions for which the associated flow field can be specified by linear interpolants~\cite{lipman_flow_2022, albergo_building_2022}, 
 \begin{equation}
-    I(x_0, x_1, t) = \alpha(t) x_0 + \beta(t) x_1 + \gamma(t) z,
+    v(x_0, x_1, t) = \alpha(t) x_0 + \beta(t) x_1 + \gamma(t) z,
 \end{equation}
 where $\alpha(0)=1$ and $\beta(0)=0$, $\alpha(1)=0$ and $\beta(1)=1$.
-The interpolating function can be made noisy by choosing a non-zero function $\gamma(t)$ such that $\gamma(0)=0$ and $\gamma(1)=0$ and $z$ is a Gaussian random variable.
-The time derivative of the interpolant $I$ provides a ``flow-matching'' objective, which is saturated when the norm of the velocity field 
+The interpolating function can be made noisy by choosing a non-zero function $\gamma(t)$ such that $\gamma(0)=0$ and $\gamma(1)=0$ and letting $z$ be a normally distributed random variable.
+The time derivative of the interpolant $v$ provides a ``flow-matching'' objective, which is saturated when the norm of the velocity field 
 \begin{equation}
-    \mathcal{L}_{\rm FM} = \EE_{t} \EE_{\xb_0, \xb_1, \zb} \left( \frac12 |v_\theta(\xb, t)|^2 - \dot I(\xb_0, \xb_1) \cdot v_{\theta}(\xb, t) \right).
+    \mathcal{L}_{\rm FM} = \EE_{t} \EE_{\xb_0, \xb_1, \zb} \left( \frac12 |v_\theta(\xb, t)|^2 - \dot v(\xb_0, \xb_1) \cdot v_{\theta}(\xb, t) \right).
 \end{equation}
 These expectations can be evaluated explicitly using a data set and samples from the easily sampled distribution $\rho_0$.
 
@@ -318,12 +318,18 @@ This basic principle has been leveraged by constructing data-dependent Gaussiani
 Preserving appropriate physical invariants, for example, invariance to permutation symmetry and periodic boundary conditions, also requires additional consideration.
 Many architectures now use attention mechanisms~\cite{vaswani_attention_2017} to obtain permutation invariant representations~\cite{wirnsberger_targeted_2020}.
 Similar considerations have been used to develop continuous normalizing flows~\cite{satorras_en_2021-1} that perserve $E(n)$ group symmetries. 
-For diffusion models, these considerations are significantly easier because any function can be employed as the score function, including well-established equivariant neural networks like SchNet~\cite{schutt_schnet_2018}.
-
+For diffusion models, these considerations are significantly easier because any function can be employed as the score function, including well-established equivariant neural networks like SchNet~\cite{schutt_schnet_2018}. 
 
 - recent works with diffusion models integrating PINN loss terms
 
 \section{Augmenting mode discovery with coarse-grained models}\label{sec:nfphys}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.6\linewidth]{figs/gaussian_base.pdf}
+    \caption{Boltzmann backmapping}
+    \label{fig:enter-label}
+\end{figure}
 
 The dual problem of mode collapse and lack of data requires fundamentally different approaches for building generative models to sample thermodynamic ensembles.
 Several recent works have sought to enhance sampling by carrying out dynamics in a ``latent'' space and subsequently recovering the atomistic molecular configuration using a generative model.
@@ -340,9 +346,9 @@ These approaches employ ``backmapping'', i.e., a deterministic or stochastic map
 Conditional normalizing flows---less data is needed, reconstruction of Gaussian degrees of freedom
 Can be trained end-to-end
 
-Similar techniques have been proposed to bridge levels of electronic structure theory
+Similar techniques have been proposed to bridge levels of electronic structure theory~\cite{maier_bypassing_2022}
 
-As CG models themselves benefit from increasingly powerful supervised learning, we should remain optimistic
+As CG models themselves benefit from increasingly powerful supervised learning, we should remain optimistic~\cite{wang_machine_2019, husic_coarse_2020}
 
 \section{Enhancing sampling with normalizing flows}
 The strong constraints on normalizing flows limit their expressive power, but also make available some interesting algorithmic innovations that do not require 

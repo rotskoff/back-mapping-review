@@ -1,5 +1,53 @@
-%\newcommand{\diff}[3]{\frac{\partial^{#3}#1}{\partial #2^{#3}}}
-\newcommand{\diff}[2]{\frac{\partial#1}{\partial #2}}
+\usepackage{amsmath, amssymb}
+\usepackage[x12names, rgb, html]{xcolor}
+
+\definecolor{red}{HTML}{f54b1a}
+\definecolor{pink}{HTML}{d19eb1}
+\definecolor{orange}{HTML}{d3772e}
+\definecolor{yellow}{HTML}{ebe85d}
+\definecolor{green}{HTML}{0f6852}
+\definecolor{lightblue}{HTML}{01abe9}
+\definecolor{darkblue}{HTML}{1b346c}
+\definecolor{tan}{HTML}{e5c39e}
+\definecolor{darktan}{HTML}{af9e73}
+\definecolor{grey}{HTML}{c3ced0}
+\definecolor{darkgrey}{HTML}{9dadc4}
+\definecolor{black}{HTML}{110d1b}
+\definecolor{white}{HTML}{f1f8f1}
+
+
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks = true,
+  linkcolor = red,
+  citecolor = darkblue,
+  urlcolor = lightblue
+}
+
+\usepackage[margin=1in]{geometry}
+
+\newcommand{\grant}[1]{\marginpar{\huge \textcolor{green}{$\star$}} \textcolor{green}{GMR: #1}}
+\renewcommand{\thefootnote}{$\star$}
+
+%\usepackage{ebgaramond}
+%\usepackage[cmintegrals,cmbraces]{newtxmath}
+%\usepackage{ebgaramond-maths}
+% \usepackage{fontspec}
+% \setmainfont[]{ebgaramond}
+% \setmainfont[
+%     Path = theme/,
+%     Ligatures=TeX,
+%     UprightFont = et-book-roman-old-style-figures,
+%     ItalicFont = et-book-display-italic-old-style-figures,
+%     BoldItalicFont = et-book-semi-bold-old-style-figures,
+%     BoldFont = et-book-bold-line-figures
+%   ]{}
+
+\usepackage{graphicx}
+\graphicspath{{figs/}}
+
+
+\newcommand{\diff}[3]{\frac{\partial^{#3}#1}{\partial #2^{#3}}}
 \newcommand{\Diff}[3]{\frac{d^{#3}#1}{d #2^{#3}}}
 
 \newcommand{\bfm}[1]{\mathchoice {\mbox{\boldmath$\displaystyle#1$}}
@@ -8,41 +56,36 @@
     {\mbox{\boldmath$\scriptscriptstyle#1$}}}
 
 
-\usepackage[dvipsnames]{xcolor}
-\newcommand{\grant}[1]{\textcolor{CornflowerBlue}{#1}}
-
+\def\rhoeq{\varrho_{\rm eq}}
 \def\nb{\boldsymbol{n}}
 \def\rhob{\boldsymbol{\rho}}
 \def\varrhob{\boldsymbol{\varrho}}
 \def\thetab{\boldsymbol{\theta}}
 \def\varthetab{\boldsymbol{\vartheta}}
 \def\etab{\boldsymbol{\eta}}
-\def\Lambdab{\boldsymbol{\Lambda}}
-\def\Gammab{\boldsymbol{\Gamma}}
+\def\xib{\boldsymbol{\xi}}
 \def\ab{\boldsymbol{a}}
 \def\bb{\boldsymbol{b}}
 \def\cb{\boldsymbol{c}}
-\def\eb{\boldsymbol{e}}
 \def\qb{\boldsymbol{q}}
+\def\pb{\boldsymbol{p}}
 \def\Qb{\boldsymbol{Q}}
 \def\Jb{\boldsymbol{J}}
 \def\kb{\boldsymbol{k}}
-\def\lb{\boldsymbol{l}}
 \def\rb{\boldsymbol{r}}
-\def\sb{\boldsymbol{s}}
-\def\ub{\boldsymbol{u}}
 \def\vb{\boldsymbol{v}}
 \def\wb{\boldsymbol{w}}
 \def\xb{\boldsymbol{x}}
 \def\yb{\boldsymbol{y}}
 \def\zb{\boldsymbol{z}}
-\def\xib{\boldsymbol{\xi}}
-\def\Fb{\boldsymbol{F}}
+
 \def\Mb{\boldsymbol{M}}
 \def\Tb{\boldsymbol{T}}
 \def\Xb{\boldsymbol{X}}
+\def\Xbu{\boldsymbol{X}^{u}}
 \def\Wb{\boldsymbol{W}}
-\def\Yb{\boldsymbol{Y}}
+
+\def\Xu{X^{u}}
 
 \def\grad{\nabla}
 \def\div{\nabla \cdot}
@@ -54,15 +97,12 @@
 \def\lap{\Delta}
 \def\eps{\varepsilon}
 
-\def\kbT{k_\mathrm{B} T}
-
 \def\RR{\mathbb{R}} \def\NN{\mathbb{N}} \def\ZZ{\mathbb{Z}}
 \def\EE{\mathbb{E}}\def\PP{\mathbb{P}}
 
 \newcommand{\ddt}{\frac{\partial}{\partial t}}
 \newcommand{\ddx}{\frac{\partial}{\partial x}}
 \newcommand{\avg}[1]{\left\langle #1 \right\rangle}
-%\newcommand{\dbar}{{\mkern3mu\mathchar'26\mkern-12mu d}}
 
 \def\<{\langle} \def\>{\rangle}
 
