@@ -2,7 +2,10 @@
 \input{preamble.tex}
 
 \title{Sampling thermodynamic ensembles of molecular systems with generative neural networks: Will integrating physics-based models close the generalization gap?}
-\author{Grant M. Rotskoff}
+\author{Grant M. Rotskoff\\
+Department of Chemistry, Stanford, CA USA 94305\\
+Institute for Computational and Mathematical Engineering, Stanford, CA USA 94305\\
+\texttt{rotskoff@stanford.edu}}
 \date{\today}
 
 \usepackage{fancyhdr}
@@ -37,31 +40,6 @@ In this review we discuss methods and future directions for directly incorporati
 \end{abstract}
 
 
-
-% %% use optional labels to link authors explicitly to addresses:
-% \author[label1,label2]{Grant M. Rotskoff}
-% \affiliation[label1]{organization={Department of Chemistry, Stanford University},
-%             %addressline={Keck Science Building},
-%             city={Stanford},
-%             postcode={94305},
-%             state={CA},
-%             country={USA}}
-% %%
-% \affiliation[label2]{organization={Institute for Computational and Mathematical Engineering},
-%             %addressline={},
-%             city={Stanford},
-%             postcode={94305},
-%             state={CA},
-%             country={USA}}
-
-% % \affiliation{organization={Stanford University},%Department and Organization
-% %             addressline={}, 
-% %             city={},
-% %             postcode={}, 
-% %             state={},
-% %             country={}}
-
-
 %% main text
 \section{Introduction and background}
 \label{sec:intro}
@@ -80,8 +58,16 @@ Information about a target probability distribution is either accessible through
 Generative models have attracted enormous attention for applications outside of science, such as text-to-image generation with denoising diffusion models~\cite{song_score-based_2022,ho_denoising_nodate} and auto-regressive text generation with large language models (LLMs)~\cite{vaswani_attention_2017}. 
 The natural question, of course, is whether or not these approaches can amplify and accelerate scientific inquiry in the chemical context.
 
+\begin{figure*}
+\begin{center}
+\includegraphics[width=0.9\linewidth]{schematic.pdf}
+\end{center}
+\caption{Schematic overview of different types of models under consideration. (a) Denoising diffusion models. (b) Continuous normalizing flows and flow-matching models. (c) Normalizing flows based on coupling layers and compositional invertible maps.}
+\label{fig:models}
+\end{figure*}
+
 In this review, we seek to articulate the potentialities and challenges of using generative models to sample finite temperature equilibrium probability distributions of chemical systems in the condensed phase.
-We emphasize that this task is considerably different from, for example, protein structure prediction using alphaFold~\cite{jumper_highly_2021}, which predicts the crystal structure but does not capture molecular fluctuations.
+We emphasize that this task is considerably different from, for example, protein structure prediction using alphaFold~\cite{jumper_highly_2021, watson_novo_2023}, which predicts the crystal structure but does not capture molecular fluctuations.
 Perhaps the defining challenge facing the generative modeling paradigm is \emph{generalization}: in many complex scientific tasks, large repositories of training data simply do not exist and generative models must instead be built from smaller data sets than those used for image generation applications or LLMs; in the latter case, empirical scaling laws show that increasing amounts of data improve the test loss as a power law~\cite{kaplan_scaling_2020, dyer_explaining_2021}.
 If a generative model can only effectively sample molecular configurations that are very close to those provided in an initial data set, then little useful information can be gained from sampling the generative model. 
 Nevertheless, researchers are actively building strategies to augment data, improve transferability, and enhance generalization by integrating generative models into enhanced sampling schemes already widely used in molecular simulation.
@@ -89,6 +75,12 @@ Nevertheless, researchers are actively building strategies to augment data, impr
 To provide a comprehensive overview of the challenges and opportunities afforded by generative models, we will first review current modeling paradigms, neural network architectures, and training approaches, without specializing to molecular systems. 
 We will then discuss efforts to incorporate \emph{physical inductive bias}, that is, natural physical invariance and equivariance into generative neural networks, which promises to improve the quality of the generated samples and reduce training effort.
 Our central focus will be on the question generalization and we will discuss several distinct strategies that seek to improve the capacity of these models for discovery, a question that remains formative for this new and developing field.
+Finally, while there have been many efforts to incorporate generative models into the framework of existing enhanced sampling algorithms, for example, replica exchange~\cite{invernizzi_skipping_2022, wang_2023}, here we focus only on algorithms that aim to generate the entire molecular structure \emph{de novo}.
+For an excellent review on enhanced sampling methods that incorporate machine learning, see Ref.~\cite{mehdi_enhanced_2023}.
+% - Doucet stuff
+% - pratyush ddpm replica exchange 
+% While these methods are closely related to the task we focused on in this review, we exclude them from thorough discussion because the aim is not directly to sample using the generative model.
+% An excellent review on these methods recently appeared~\cite{mehdi_enhanced_2023}.
 
 
 \section{Generative modeling for molecular systems}
@@ -112,7 +104,7 @@ Access to a collection of configurations allows us to estimate observable proper
 \end{equation}
 for any observable function $\mathcal{A}.$
 In principle, estimating \eqref{eq:avg} is straightforward, requiring only a direct MCMC simulation or a molecular dynamics (MD) simulation in which the samples have been appropriately ``metropolized'' to ensure Boltzmann statistics~\cite{frenkel_understanding_2002}. 
-In practice, such estimates rarely converge quickly because molecular systems often have metastable probability distributions, as illustrated in Fig.~\ref{fig:metastable}. 
+In practice, such estimates rarely converge quickly because molecular systems often have metastable probability distributions, as illustrated in Fig.~\ref{fig:models} (a). 
 The amount simulation time and hence computational effort required for MD or MCMC to ``mix'' between the two metastable configurations is simply prohibitive in many processes of interest~\cite{lelievre_free_2010}.
 
 Generative models, which seek to directly approximate $\rhoeq$ and sample efficiently from it, do not suffer from the issue of slow mixing because each new sample is statistically uncorrelated from the last.
@@ -128,13 +120,7 @@ Neither of these assumptions should be taken for granted: we will focus primaril
 
 In general, there are two distinct strategies for building a generative model to represent a Boltzmann distribution: \emph{training with data} and \emph{training with energy}, which we discuss in detail below. 
 
-\begin{figure*}
-\begin{center}
-\includegraphics[width=0.5\linewidth]{gaussian_base.pdf}
-\end{center}
-\caption{Schematic overview of different types of models under consideration. (a) Denoising diffusion models. (b) Continuous normalizing flows and flow-matching models. (c) Normalizing flows based on coupling layers and compositional invertible maps.}
-\label{fig:models}
-\end{figure*}
+
 
 \subsection{Models trained purely with data}
 
@@ -149,7 +135,7 @@ There are many classes of generative models that we choose not to discuss here, 
 When discussing models trained with data, we will assume that we are given a data set consisting of $n$ points, denoted $\mathcal{D} = \{ \xb_i \}_{i=1}^n$.
 While the frameworks are far more general, the applications we have in mind are those for which each point $\xb_i$ is a molecular configuration and is distributed according to a Boltzmann distribution, i.e., $\xb_i \sim \rhoeq.$
 
-\subsubsection{Denoising diffusion models}
+\subsubsection{Denoising diffusion models}\label{sec:diffusion}
 
 Diffusion models were initially developed in Ref.~\cite{sohl-dickstein_hamiltonian_2012} using a theoretical framework built from ideas about time-reversed dynamics originally in the nonequilibrium statistical mechanics literature~\cite{crooks_entropy_1999, kurchan_fluctuation_1998, lebowitz_gallavotticohen-type_1999}. 
 At a high level, the idea of diffusion models to define a stochastic process in which we progressively transform samples from a data set into statistical noise.
@@ -203,11 +189,11 @@ One potential strategy for obtaining an unbiased estimator of the partition func
 \begin{figure*}
     \centering
     \includegraphics[width=0.6\linewidth]{modular_fig.pdf}
-    \caption{Caption}
-    \label{fig:enter-label}
+    \caption{Modular strategies}
+    \label{fig:modular}
 \end{figure*}
 
-\subsubsection{Flow-based models}
+\subsubsection{Flow-based models}\label{sec:flowmatch}
 
 The idea of transforming samples from an ``easy'' distribution, like a Gaussian, into intricately structured random variables has also motivated more direct approaches.
 Normalizing flows~\cite{tabak_density_2010,rezende_variational_2015} seek to transform a tractable initial distribution into samples with high probability in the target distribution with a single map.
@@ -242,9 +228,9 @@ In this generative modeling framework, the transformation between the tractable 
 \end{equation}
 where $\alpha(0)=1$ and $\beta(0)=0$, $\alpha(1)=0$ and $\beta(1)=1$.
 The interpolating function can be made noisy by choosing a non-zero function $\gamma(t)$ such that $\gamma(0)=0$ and $\gamma(1)=0$ and letting $z$ be a normally distributed random variable.
-The time derivative of the interpolant $v$ provides a ``flow-matching'' objective, which is saturated when the norm of the velocity field 
+The time derivative of the interpolant $v$ provides a regression objective, 
 \begin{equation}
-    \mathcal{L}_{\rm FM} = \EE_{t} \EE_{\xb_0, \xb_1, \zb} \left( \frac12 |v_\theta(\xb, t)|^2 - \dot v(\xb_0, \xb_1) \cdot v_{\theta}(\xb, t) \right).
+    \mathcal{L}_{\rm flow}(\theta) = \EE_{t} \EE_{\xb_0, \xb_1, \zb} \left( \frac12 |v_\theta(\xb, t)|^2 - \dot v(\xb_0, \xb_1) \cdot v_{\theta}(\xb, t) \right).
 \end{equation}
 These expectations can be evaluated explicitly using a data set and samples from the easily sampled distribution $\rho_0$.
 
@@ -259,7 +245,7 @@ However, like diffusion models, likelihood estimation is difficult.
 Computing the likelihood of samples generated from the learned velocity field requires an integral analogous to \eqref{eq:pfode} which will not be tractable in high-dimensional systems.
 
 
-\subsubsection{Generic challenges with data-based training}
+\subsubsection{Generic challenges with data-based training}\label{sec:databased}
 
 Both diffusion models and flow-based models are trained purely with data, which means that we have not exploited knowledge of the statistical likelihood---i.e., the energy---at all. 
 While we can only speculate at this point, we believe that training with the energy function will provide much needed information in cases where the energy is \emph{rugged}.
@@ -283,44 +269,50 @@ To do, we use the ``forward'' KL divergence as the loss function
 The appeal of this training modality is that it requires, in principle, \emph{no data}.
 The samples are generated by pushing forward random variables from the tractable base distribution $\rho_0$ with the parametric map $T_{\theta}$.
 In the context of thermal physical systems, the configurations are Boltzmann distributed, and the statistical likelihood is the unitless temperature-scaled energy $-\beta U.$
-For this reason, we also refer to this training procedure as \textit{energy based} training.
+For this reason, we also refer to this training procedure as \textit{energy-based} training.
 
-Energy-based training of generative models offers the tantilizing possibility of discovering new molecular configurations while training a model. 
+Energy-based training of generative models offers the tantalizing possibility of discovering new molecular configurations while training a model. 
 Unfortunately, the objective \eqref{eq:energy_kl} fails in practice due to a phenomenon called \textit{mode collapse}. 
 Mode collapse is characterized by the probability mass of the distribution parametrized by the normalizing flow concentrating on a single metastable state.
 This phenomenon is illustrated in Fig.~\ref{fig:models} (c).
-The propensity of energy based training to suffer from mode collapse can controlled to some extent with regularization~\cite{del_debbio_efficient_2021}.
+The propensity of energy-based training to suffer from mode collapse can be controlled to some extent with regularization~\cite{del_debbio_efficient_2021}.
 However, even systematic alterations to the loss function do not seem sufficient to avoid mode collapse, though they can mitigate the effect to some extent~\cite{felardos_designing_2023}.
 
 A more reliable method for avoiding mode collapse is to retain probability mass in known modes during training~\cite{gabrie_adaptive_2022}.
 While this strategy seems to work in general settings, it requires \emph{a priori} knowledge of the modes.
-Mode discovery likely requires directly sampling from physics-based models.
+Mode discovery likely requires direct sampling from physics-based models.
 Alternatively, through the means described in the following sections, it may be possible to augment generative models with physical models for mode discovery as discussed in Sec.~\ref{sec:nfphys}. 
 
 \subsection{Adapting normalizing flow models for physical systems}
 
-While it was apparent that normalizing flows could be used a transition density (also called generation probabilities) in a Markov chain Monte Carlo algorithm~\cite{rezende_variational_2015}, No\'{e} et al.~\cite{noe_boltzmann_2019} were the first to show that this approach could be used in the context of physics-based models of molecular systems, such as proteins.
-Alternative machine learning approaches for parameterizing transition densities had also been proposed, including strategies based on Hamiltonian Monte Carlo~\cite{levy_generalizing_2018} and nonlinear independent component estimators~\cite{song_-nice-mc_2017}, but these have not been thoroughly explored for condensed phase systems like proteins. 
+While it was apparent that normalizing flows could be used as a transition density (also called generation probabilities) in a Markov chain Monte Carlo algorithm~\cite{rezende_variational_2015}, No\'{e} et al.~\cite{noe_boltzmann_2019} were the first to show that this approach could be used in the context of physics-based models of molecular systems, such as proteins.
+Alternative machine learning approaches for parameterizing transition densities have also been proposed, including strategies based on Hamiltonian Monte Carlo~\cite{levy_generalizing_2018} and nonlinear independent component estimators~\cite{song_-nice-mc_2017}, but these have not been thoroughly explored for condensed phase systems like proteins. 
 In Ref.~\cite{noe_boltzmann_2019}, the strategy requires a large training dataset, because a data-dependent Gaussianization, known as PCA whitening, is used to preprocess the data. 
 This approach reduces the learning burden on the normalizing flow because the target distribution has been transformed to be approximately Gaussian. 
 
-A set of subsequent investigations provided more exacting test of the statistical accuracy of sampling strategies built on density estimation with normalizing flows. 
+A set of subsequent investigations provided a more exacting test of the statistical accuracy of sampling strategies built on density estimation with normalizing flows. 
 While atomic crystals have low conformational diversity by comparison with condensed phase biomolecules, exact computation of the absolute free energy is possible due to the now classic Frenkel Ladd thermodynamic integration approach~\cite{frenkel_new_1984}.  
 Work by Wirnsberger and co-workers~\cite{wirnsberger_normalizing_2021, wirnsberger_estimating_2023} and others~\cite{ahmad_free_2021} compared Frenkel Ladd to sampling with normalizing flows, showing that machine-learned samplers can provide quantitatively accurate estimates of the absolute free energy.
-These works introduced an elegant parameterization of the a normalizing flow in which the tractable distribution was chosen to be a mixture of truncated Gaussians at centers of the atomic lattice. 
-Recent extensions of this framework for the isothermal-isobaric ensemble~\cite{wirnsberger_estimating_2023} allow for simultaneous generation of atomic positions and box vectors.
+These works introduced an elegant parameterization of a normalizing flow in which the tractable distribution was chosen to be a mixture of truncated Gaussians at the centers of the atomic lattice. 
+Recent extensions of this framework for the isothermal-isobaric ensemble~\cite{wirnsberger_estimating_2023} allow for the simultaneous generation of atomic positions and box vectors.
 While the results of this approach are again extremely accurate, in both cases, the computational effort associated with training is significant.
 
 The notion of choosing an initial or ``base'' distribution that captures essential physical properties of the system, which we call an informed base distribution, can be essential. 
 For example, \cite{gabrie_adaptive_2022} demonstrates that choosing a reference process for a stochastic field theory that does not have the same fluctuation spectrum can lead to mutually singular probability distributions, meaning that no proposal from the normalizing flow will ever be selected.
 This basic principle has been leveraged by constructing data-dependent Gaussianization maps to make the data distribution approximately Gaussian, as previously mentioned~\cite{noe_boltzmann_2019}.
+Data dependent base distributions may offer a route to developing more expressive generative models, such as those based on rotameric libraries~\cite{dunbrack_jr_bayesian_1997, dunbrack_rotamer_2002}.
+A strategy based on this principle is illustrated in Fig.~\ref{fig:modular}
+The relatively small number of modes energetically accessible to a given side chain has inspired a number of efforts to sample these side chains in a data driven way, for example, in Ref.~\cite{jumper_rapid_2017}.
 
-Preserving appropriate physical invariants, for example, invariance to permutation symmetry and periodic boundary conditions, also requires additional consideration.
+Preserving appropriate physical invariants, for example, invariance to permutation symmetry and periodic boundary conditions also requires additional consideration.
 Many architectures now use attention mechanisms~\cite{vaswani_attention_2017} to obtain permutation invariant representations~\cite{wirnsberger_targeted_2020}.
-Similar considerations have been used to develop continuous normalizing flows~\cite{satorras_en_2021-1} that perserve $E(n)$ group symmetries. 
+Similar considerations have been used to develop continuous normalizing flows~\cite{satorras_en_2021-1} that preserve $E(n)$ group symmetries. 
 For diffusion models, these considerations are significantly easier because any function can be employed as the score function, including well-established equivariant neural networks like SchNet~\cite{schutt_schnet_2018}. 
 
-- recent works with diffusion models integrating PINN loss terms
+While diffusion models~\ref{sec:diffusion} and flow-matching models~\ref{sec:flowmatch} are not typically trained with data-free, maximum likelihood objectives, a number of recent works have sought to additional physical information into the training procedure.
+For example, Lai et al.~\cite{lai_fp-diffusion_2023} proposed using a physics-informed neural network style loss function~\cite{karniadakis_physics-informed_2021} to ensure that the Fokker-Planck equation associated with the diffusion process is satisfied.
+A more explicit effort to incorporate a physical prior into the loss function was recently used in Ref.~\cite{zheng_towards_2023}, which employs a pre-training step to match the score function with the atomistic forces.
+
 
 \section{Augmenting mode discovery with coarse-grained models}\label{sec:nfphys}
 
@@ -333,37 +325,51 @@ For diffusion models, these considerations are significantly easier because any 
 
 The dual problem of mode collapse and lack of data requires fundamentally different approaches for building generative models to sample thermodynamic ensembles.
 Several recent works have sought to enhance sampling by carrying out dynamics in a ``latent'' space and subsequently recovering the atomistic molecular configuration using a generative model.
-In this section, we argue that dimensionality reduction through physics-based coarse-graining is a scalable strategy for latent space sampling that can avoid mode collapse.
+In this section, we argue that dimensionality reduction through physics-based coarse-graining~\cite{noid_multiscale_2008, jin_bottom-up_2022} is a scalable strategy for latent space sampling that can avoid mode collapse.
 
+\subsection{Coarse-graining with generative models}
 
 Sidky et al.~\cite{sidky_molecular_2020} were among the first to use a latent space sampling approach for biophysical dynamics.
 They trained a generative adversarial network from molecular dynamics trajectory data and provided a proof-of-concept demonstration of data recovery.
 However, because generative adversarial networks are not suitable for likelihood estimation or inversion, it is not possible to metropolize or reweight the sampling, so reference data is necessary.
+Alternative neural network architectures, such as variational autoencoders, similarly cannot be used with an assurance of Boltzmann statistics, but provide more control over the latent space~\cite{wang_coarse-graining_2019}.
+While the specific task in both of these cases is dimensionality reduction for coarse-graining, similar strategies have also been used to develop reaction coordinates~\cite{ribeiro_reweighted_2018}.
 
+More recently, we have combined coarse-grained models with generative models as a strategy to accelerate the rate of mixing between metastable states, potentially discovering new metastable basins~\cite{chennakesavalu_ensuring_2023}.
+This approach employs ``backmapping'', i.e., a deterministic or stochastic map that reconstructs the full atomistic state from a coarse-grained configuration~\cite{dunbrack_jr_bayesian_1997, bower_prediction_1997}.
+Importantly, Ref.~\cite{chennakesavalu_adaptive_2023} uses invertible normalizing flows to carry out the backmapping, meaning that the conditional probability of the backmapped configuration can be computed exactly and hence reweighted to a Boltzmann distribution. 
+Similar techniques have been proposed to bridge levels of electronic structure theory~\cite{maier_bypassing_2022}.
 
-More recently, combining coarse-grained models with generative models has emerged as a strategy to accelerate the rate of mixing between metastable states, potentially discovering new metastable basins~\cite{chennakesavalu_ensuring_2023}.
-These approaches employ ``backmapping'', i.e., a deterministic or stochastic map that reconstructs the full atomistic state from a coarse-grained configuration~\cite{dunbrack_jr_bayesian_1997, bower_prediction_1997}.
-Conditional normalizing flows---less data is needed, reconstruction of Gaussian degrees of freedom
-Can be trained end-to-end
+Combining a physics-based coarse-grained model with a \emph{conditional} generative model reduces the computational burden on the generative model in two important ways.
+First, because the coarse-graining can be constructed to remove degrees of freedom that fluctuate minimally or are approximately Gaussian in the fine-grained space, the target data distribution can be comparably ``simple''. 
+If the generative model needs only to reconstruct Gaussian degrees of freedom, then the learned mapping can itself be simple. 
+Secondly, by incorporating a physics-based model, the exploratory tendencies of the model will be constrained to a physically realistic manifold. 
 
-Similar techniques have been proposed to bridge levels of electronic structure theory~\cite{maier_bypassing_2022}
+The idea of incorporating auxiliary dynamics to combine sampling with generative models and existing Monte Carlo samplers has its origins in research on adaptive Monte Carlo methods~\cite{del_moral_adaptive_2012}.
+Previous work on this topic~\cite{gabrie_efficient_2021, gabrie_adaptive_2022} uses generation moves that alternate between traditional MCMC moves and learned generation with normalizing flows.
+Nevertheless, many questions remain about how to best incorporate strong physical priors into generative model, including: Which architectures are best suited to pre-conditioning with physical information? How aggressively should one coarse-grain the original model? In what way should we couple coarse-graining and generative modeling?
 
-As CG models themselves benefit from increasingly powerful supervised learning, we should remain optimistic~\cite{wang_machine_2019, husic_coarse_2020}
+Indeed, as coarse-grained models themselves benefit from increasingly powerful supervised learning~\cite{wang_machine_2019, husic_coarse_2020} we should remain optimistic that the states explored in the coarse-grained simulations will correspond well with physically meaningful metastable states of the fine-grained system. 
+Leveraging the power of these models and their improved fidelity to the physical free energy surface will constrain generative models in an important and useful way. 
+While Ref.~\cite{chennakesavalu_ensuring_2023} takes a first step to faithfully and rigorously couple these two paradigms, the transformative capabilities of generative models will rely on algorithmic, computational, and conceptual developments to extend this work towards true generalization. 
 
-\section{Enhancing sampling with normalizing flows}
-The strong constraints on normalizing flows limit their expressive power, but also make available some interesting algorithmic innovations that do not require 
+% \subsection{Enhancing sampling with normalizing flows}
 
-- skipping the replica exchange ladder ~\cite{invernizzi_skipping_2022}
-- Doucet stuff
-- pratyush ddpm replica exchange 
+% Not sure about this section...
 
-While these methods are closely related to the task we focused on in this review, we exclude them from thorough discussion because the aim is not directly to sample using the generative model.
-An excellent review on these methods recently appeared~\cite{mehdi_enhanced_2023}.
+% The strong constraints on normalizing flows limit their expressive power but also make available some interesting algorithmic innovations that do not require 
+% - skipping the replica exchange ladder ~\cite{invernizzi_skipping_2022}
+% - Doucet stuff
+% - pratyush ddpm replica exchange 
+% While these methods are closely related to the task we focused on in this review, we exclude them from thorough discussion because the aim is not directly to sample using the generative model.
+% An excellent review on these methods recently appeared~\cite{mehdi_enhanced_2023}.
 
-\section{Challenges and outlook}
+% \section{Challenges and outlook}
 
-The aim of this forward-looking review is to establish a challenge for the community working at the interface generative machine learning and physical chemistry to build models that will enable discovery rather than models that accurately reflect their training data. 
-The role of strong physical inductive biases in this challenge is becoming clear: even in simple systems like Lennard-Jones liquids state-of-the-art generative models fail to capture the subtle intermolecular correlations because the distributions they produce are too smooth.
+% Not sure about this section...
+
+% The aim of this forward-looking review is to establish a challenge for the community working at the interface generative machine learning and physical chemistry to build models that will enable discovery rather than models that accurately reflect their training data. 
+% The role of strong physical inductive biases in this challenge is becoming clear: even in simple systems like Lennard-Jones liquids state-of-the-art generative models fail to capture the subtle intermolecular correlations because the distributions they produce are too smooth.
 
 
 
