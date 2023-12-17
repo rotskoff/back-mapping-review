@@ -40,7 +40,6 @@ In this review, we discuss methods and future directions for directly incorporat
 \end{abstract}
 
 
-%% main text
 \section{Introduction and background}
 \label{sec:intro}
 
@@ -55,7 +54,7 @@ A comparably new modeling paradigm is emerging alongside the developments in sup
 Often called ``unsupervised learning'' as a contrast with regression or classification tasks on labelled data, generative models seek to directly emulate data.
 For the purposes of this review, we will define a generative model to be any model that is parameterized to draw samples from a target probability distribution.
 Information about a target probability distribution is either accessible through a data set of samples drawn from the distribution or, alternatively, through the unnormalized statistical likelihood function, which for a Gibbs-Boltzmann distribution is simply the energy.  
-Generative models have attracted enormous attention for applications outside of science, such as text-to-image generation with denoising diffusion models~\cite{song_score-based_2022,ho_denoising_nodate} and autoregressive text generation with large language models (LLMs)~\cite{vaswani_attention_2017}. 
+Generative models have attracted enormous attention for applications outside of science, such as text-to-image generation with denoising diffusion models~\cite{song_score-based_2022,ho_denoising_2020} and autoregressive text generation with large language models (LLMs)~\cite{vaswani_attention_2017}. 
 The natural question, of course, is whether or not these approaches can amplify and accelerate scientific inquiry in the chemical context.
 
 \begin{figure*}
@@ -77,10 +76,6 @@ We will then discuss efforts to incorporate \emph{physical inductive bias}, that
 Our central focus will be on the question of generalization, and we will discuss several distinct strategies that seek to improve the capacity of these models for discovery, a question that remains formative for this new and developing field.
 Finally, while there have been many efforts to incorporate generative models into the framework of existing enhanced sampling algorithms, for example, replica exchange~\cite{invernizzi_skipping_2022, wang_2023}, here we focus only on algorithms that aim to generate the entire molecular structure \emph{de novo}.
 For an excellent review on enhanced sampling methods that incorporate machine learning, see Ref.~\cite{mehdi_enhanced_2023}.
-% - Doucet stuff
-% - pratyush ddpm replica exchange 
-% While these methods are closely related to the task we focused on in this review, we exclude them from thorough discussion because the aim is not directly to sample using the generative model.
-% An excellent review on these methods recently appeared~\cite{mehdi_enhanced_2023}.
 
 
 \section{Generative modeling for molecular systems}
@@ -129,7 +124,7 @@ In some sense, when training with data, these problems become supervised learnin
 Many modern generative neural networks were designed for image data, where, as we can intuitively recognize, small perturbations do not typically affect our ability to interpret the result. 
 However, this is not the case for molecular systems: a single particle-particle overlap or a violation of chemical bonding rules can be catastrophic. 
 
-In the following discussion, we will focus on two closely related generative modeling strategies, namely, denoising diffusion probabilistic models, which we will simply call \emph{diffusion models}, and flow matching models~\cite{lipman_flow_2022, albergo_building_2022, albergo_stochastic_2023} which are also known as stochastic interpolants.  
+In the following discussion, we will focus on two closely related generative modeling strategies, namely, denoising diffusion probabilistic models, which we will simply call \emph{diffusion models}, and flow matching models~\cite{lipman_flow_2022, albergo_building_2023, albergo_stochastic_2023} which are also known as stochastic interpolants.  
 There are many classes of generative models that we choose not to discuss here, including generative adversarial networks~\cite{goodfellow_generative_2014} and restricted Boltzmann machines~\cite{salakhutdinov_restricted_2007, salakhutdinov_deep_2009} because, while powerful, these models are lesser used in the applications of interest to this review. 
 
 When discussing models trained with data, we will assume that we are given a data set consisting of $n$ points, denoted $\mathcal{D} = \{ \xb_i \}_{i=1}^n$.
@@ -162,8 +157,7 @@ To optimize the score, we minimize an objective~\cite{song_score-based_2022} in 
 where the expectations here are computed uniformly in time $t$, with $\xb_0 \sim \rho_0$, and $\xb_t$ sampled from the distribution of stochastic trajectories starting from $\xb_0$ at time $t=0.$
 Knowledge of the conditional score enables regression, but an explicit expression for $\log \rho_t (\cdot | \xb_0)$ is only available when the noising SDE is linear, and hence the conditional distribution at intermediate times is Gaussian.
 This poses, at the very least, an obstacle to making a physics-informed choice of the noising SDE. 
-Diffusion models have already been embraced in a variety of contexts, and while there are several different formalisms (discrete time~\cite{ho_denoising_nodate}, continuous time~\cite{song_score-based_2022,vroylandt_likelihood-based_2022}) all these approaches share in common a dynamics that flows samples from a data set to a tractable distribution and a data-dependent parameterization of the inverse dynamics.
-%See ~\cite{} for a comprehensive overview. 
+Diffusion models have already been embraced in a variety of contexts, and while there are several different formalisms (discrete time~\cite{ho_denoising_2020}, continuous time~\cite{song_score-based_2022,vroylandt_likelihood-based_2022}) all these approaches share in common a dynamics that flows samples from a data set to a tractable distribution and a data-dependent parameterization of the inverse dynamics.
 
 Diffusion models have a variety of advantages that make them suitable for working with physical systems. 
 One important aspect of the generative process is that the physical invariants can be directly incorporated into the score function.
@@ -217,12 +211,12 @@ This approach is, however, limited computationally due to the requirement that t
 Furthermore, computing exact likelihoods is not tractable for high-dimensional systems because the trace of the Jacobian matrix requires $\mathcal{O}(d^2)$ operations in dimension $d$ at every step of the ODE solve.
 To mitigate this, the trace is typically estimated using the Hutchinson trace estimator~\cite{hutchinson_stochastic_1989}, but the variance can be problematic in practice. 
 
-Recent works that seek to extend and enhance the framework of continuous normalizing flows have introduced flow matching~\cite{peluchetti_non-denoising_2022,peluchetti_diffusion_2023,lipman_flow_2022} or stochastic interpolants~\cite{albergo_building_2022, albergo_stochastic_2023}.
+Recent works that seek to extend and enhance the framework of continuous normalizing flows have introduced flow matching~\cite{peluchetti_non-denoising_2022,peluchetti_diffusion_2023,lipman_flow_2022} or stochastic interpolants~\cite{albergo_building_2023, albergo_stochastic_2023}.
 A representation of the direct transformation between two distributions is parameterized using only a vector field $v_{\theta}: \RR^d\times[0,1]\to \RR^d$ and samples from the target distribution $\rho_1$ are obtained by solving the initial value ODE,
 \begin{equation}
     \dot \xb_t = v_{\theta}(\xb,t), \quad \xb_0 \sim \rho_0.
 \end{equation}
-In this generative modeling framework, the transformation between the tractable Gaussian distribution and the target is first built from a sequence of simple intermediate distributions for which the associated flow field can be specified by linear interpolants~\cite{lipman_flow_2022, albergo_building_2022}, 
+In this generative modeling framework, the transformation between the tractable Gaussian distribution and the target is first built from a sequence of simple intermediate distributions for which the associated flow field can be specified by linear interpolants~\cite{lipman_flow_2022, albergo_building_2023}, 
 \begin{equation}
     v(x_0, x_1, t) = \alpha(t) x_0 + \beta(t) x_1 + \gamma(t) z,
 \end{equation}
@@ -348,7 +342,7 @@ Leveraging the power of these models and their improved fidelity to the physical
 While Ref.~\cite{chennakesavalu_ensuring_2023} takes a first step to faithfully and rigorously couple these two paradigms, the transformative capabilities of generative models will rely on algorithmic, computational, and conceptual developments to extend this work towards true generalization. 
 
 
- \bibliographystyle{alpha} 
- \bibliography{references}
+\bibliographystyle{alpha} 
+\bibliography{references}
 
 \end{document}
