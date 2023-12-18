@@ -67,14 +67,14 @@ The natural question, of course, is whether or not these approaches can amplify 
 
 In this review, we seek to articulate the potentialities and challenges of using generative models to sample finite temperature equilibrium probability distributions of chemical systems in the condensed phase.
 We emphasize that this task is considerably different from, for example, protein structure prediction using AlphaFold~\cite{jumper_highly_2021, watson_novo_2023}, which predicts the crystal structure but does not capture molecular fluctuations.
-Perhaps the defining challenge facing the generative modeling paradigm is \emph{generalization}: in many complex scientific tasks, large repositories of training data simply do not exist and generative models must instead be built from smaller data sets than those used for image generation applications or LLMs; in the latter case, empirical scaling laws show that increasing amounts of data improve the test loss as a power law~\cite{kaplan_scaling_2020, dyer_explaining_2021}.
+Perhaps the defining challenge facing the generative modeling paradigm is \emph{generalization}: in many complex scientific tasks, large repositories of training data simply do not exist and generative models must instead be built from smaller data sets than those used for image generation applications or LLMs; in the latter case, empirical scaling laws show that increasing amounts of data improve the test loss as a power law~\cite{kaplan_scaling_2020, bahri_explaining_2021}.
 If a generative model can only effectively sample molecular configurations that are very close to those provided in an initial data set, then little useful information can be gained from sampling the generative model. 
 Nevertheless, researchers are actively building strategies to augment data, improve transferability, and enhance generalization by integrating generative models into enhanced sampling schemes already widely used in molecular simulation.
 
 To provide a comprehensive overview of the challenges and opportunities afforded by generative models, we will first review current modeling paradigms, neural network architectures, and training approaches, without specializing to molecular systems. 
 We will then discuss efforts to incorporate \emph{physical inductive bias}, that is, natural physical invariance and equivariance into generative neural networks, which promises to improve the quality of the generated samples and reduce training effort.
 Our central focus will be on the question of generalization, and we will discuss several distinct strategies that seek to improve the capacity of these models for discovery, a question that remains formative for this new and developing field.
-Finally, while there have been many efforts to incorporate generative models into the framework of existing enhanced sampling algorithms, for example, replica exchange~\cite{invernizzi_skipping_2022, wang_2023}, here we focus only on algorithms that aim to generate the entire molecular structure \emph{de novo}.
+Finally, while there have been many efforts to incorporate generative models into the framework of existing enhanced sampling algorithms, for example, replica exchange~\cite{invernizzi_skipping_2022, wang_data_2022}, here we focus only on algorithms that aim to generate the entire molecular structure \emph{de novo}.
 For an excellent review on enhanced sampling methods that incorporate machine learning, see Ref.~\cite{mehdi_enhanced_2023}.
 
 
@@ -211,12 +211,12 @@ This approach is, however, limited computationally due to the requirement that t
 Furthermore, computing exact likelihoods is not tractable for high-dimensional systems because the trace of the Jacobian matrix requires $\mathcal{O}(d^2)$ operations in dimension $d$ at every step of the ODE solve.
 To mitigate this, the trace is typically estimated using the Hutchinson trace estimator~\cite{hutchinson_stochastic_1989}, but the variance can be problematic in practice. 
 
-Recent works that seek to extend and enhance the framework of continuous normalizing flows have introduced flow matching~\cite{peluchetti_non-denoising_2022,peluchetti_diffusion_2023,lipman_flow_2022} or stochastic interpolants~\cite{albergo_building_2023, albergo_stochastic_2023}.
+Recent works that seek to extend and enhance the framework of continuous normalizing flows have introduced flow matching~\cite{liu_flow_2022,lipman_flow_2022} or stochastic interpolants~\cite{albergo_building_2023, albergo_stochastic_2023}.
 A representation of the direct transformation between two distributions is parameterized using only a vector field $v_{\theta}: \RR^d\times[0,1]\to \RR^d$ and samples from the target distribution $\rho_1$ are obtained by solving the initial value ODE,
 \begin{equation}
     \dot \xb_t = v_{\theta}(\xb,t), \quad \xb_0 \sim \rho_0.
 \end{equation}
-In this generative modeling framework, the transformation between the tractable Gaussian distribution and the target is first built from a sequence of simple intermediate distributions for which the associated flow field can be specified by linear interpolants~\cite{lipman_flow_2022, albergo_building_2023}, 
+In this generative modeling framework, the transformation between the tractable Gaussian distribution and the target is first built from a sequence of simple intermediate distributions for which the associated flow field can be specified by linear interpolants~\cite{lipman_flow_2022, liu_flow_2022, albergo_building_2023}, 
 \begin{equation}
     v(x_0, x_1, t) = \alpha(t) x_0 + \beta(t) x_1 + \gamma(t) z,
 \end{equation}
@@ -343,6 +343,6 @@ While Ref.~\cite{chennakesavalu_ensuring_2023} takes a first step to faithfully 
 
 
 \bibliographystyle{alpha} 
-\bibliography{references}
+\bibliography{refs}
 
 \end{document}
